@@ -1,30 +1,27 @@
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer
+import av
 import cv2
-import numpy as np
-from face_detector import detect_faces
 
-st.title("Live Face Detection App")
+# Load OpenCV's pre-trained face detection model
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Open webcam
-cap = cv2.VideoCapture(0)  # 0 is default webcam
+def video_frame_callback(frame):
+    img = frame.to_ndarray(format="bgr24")
 
-# Streamlit UI
-stframe = st.empty()
-
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        st.warning("Could not access the webcam.")
-        break
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Detect faces
-    frame = detect_faces(frame)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-    # Convert color from BGR to RGB for Streamlit
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # Draw rectangles around faces
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 3)
 
-    # Display frame
-    stframe.image(frame, channels="RGB")
+    return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-cap.release()
+st.title("Live Face Detection")
 
+# Use WebRTC to access webcam
+webrtc_streamer(key="face-detection", video_frame_callback=video_frame_callback)

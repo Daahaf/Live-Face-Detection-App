@@ -1,6 +1,6 @@
-streamlit
-opencv-python
-numpy
-pandas
-streamlit-webrtc
-av
+streamlit  
+opencv-python  
+deepface  
+numpy  
+pandas  
+pillow  
